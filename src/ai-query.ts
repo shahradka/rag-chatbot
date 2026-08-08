@@ -1,0 +1,45 @@
+
+export const AIQueryAPI = async (request:Request<{text:string}>, env, ctx) => {
+    if(request.method === "POST"){
+        const {text} = await request.json() as {text:string}
+        const queryEmbedding = await env.AI.run("@cf/baai/bge-base-en-v1.5", {
+            text: [text]
+        })
+
+        const queryVectorNumber = Array.from(queryEmbedding.data[0]).map(num => Number(num));
+
+        const allVectorsMatches = await env.MYCV_VECTOR_INDEX.query(queryVectorNumber, {
+            topK: 3,
+            returnValues: false,
+            returnMetadata: "all",
+            stream: true
+        })
+
+        const contextDocs = allVectorsMatches.matches.map((match) => match.metadata?.text).join("\n\n");
+        
+        const llmResponse = await env.AI.run("@cf/meta/llama-3.1-8b-instruct-fp8", {
+            prompt: `You are an AI assistant helping with questions about a resume. 
+            Use the following pieces of context to answer the user's question at the end. 
+            If you don't know the answer, just say you don't know.
+            
+            Context:
+            ${contextDocs}
+            
+            Question: ${text}`
+        });
+        
+        return new Response(llmResponse as ReadableStream, 
+            {
+                headers: {
+                    "Content-Type": "text/event-stream",
+                    "Cache-Control": "no-cache",
+                    "Connection": "keep-alive",
+                },
+            }
+        )
+    }
+    else {
+        return new Response("Method not allowed",{status:405});
+    }
+
+}

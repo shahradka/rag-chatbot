@@ -16,7 +16,6 @@ export const AIQueryAPI = async (request:Request<{text:string}>, env, ctx) => {
                 topK: 3,
                 returnValues: false,
                 returnMetadata: "all",
-                stream: true
             })
     
             const contextDocs = allVectorsMatches.matches.map((match) => match.metadata?.text).join("\n\n");
@@ -29,7 +28,8 @@ export const AIQueryAPI = async (request:Request<{text:string}>, env, ctx) => {
                 Context:
                 ${contextDocs}
                 
-                Question: ${text}`
+                Question: ${text}`,
+                stream: true
             });
             
             return new Response(llmResponse as ReadableStream, 

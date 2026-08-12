@@ -1,13 +1,26 @@
 
-export const AIQueryAPI = async (request:Request<{text:string}>, env, ctx) => {
+type ReqType = Request<{
+    id:string,
+    messages:Array<
+        {
+            parts: Array<{type: string, text: string}>, 
+            id: string, 
+            role: string
+        }
+        >,
+        trigger:string }>
+
+export const AIQueryAPI = async (request:ReqType,
+env, ctx) => {
     if(request.method !== "POST"){
         return new Response("Method not allowed", { status: 405 });
     }
     
     try{
-            const {text} = await request.json() as {text:string}
+            const payload:ReqType = await request.json() 
+
             const queryEmbedding = await env.AI.run("@cf/baai/bge-base-en-v1.5", {
-                text: [text]
+                text: [payload.messages.join(' ')]
             })
 
             const queryVectorNumber = Array.from(queryEmbedding.data[0]).map(num => Number(num));
@@ -28,7 +41,7 @@ export const AIQueryAPI = async (request:Request<{text:string}>, env, ctx) => {
                 Context:
                 ${contextDocs}
                 
-                Question: ${text}`,
+                Question: ${payload.messages.join(' ')}`,
                 stream: true
             });
             

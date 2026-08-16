@@ -1,26 +1,30 @@
 
-type ReqType = Request<{
-    id:string,
-    messages:Array<
-        {
-            parts: Array<{type: string, text: string}>, 
-            id: string, 
-            role: string
-        }
-        >,
-        trigger:string }>
+type Message = {
+    id: string;
+    role: string;
+    content: string;
+};
 
-export const AIQueryAPI = async (request:ReqType,
-env, ctx) => {
-    if(request.method !== "POST"){
+type ReqBody = {
+    id: string;
+    messages: Message[];
+};
+
+export const AIQueryAPI = async (request: Request, env, ctx) => {
+    if (request.method !== "POST") {
         return new Response("Method not allowed", { status: 405 });
     }
-    
-    try{
-            const payload:ReqType = await request.json() 
 
+    try {
+        const payload = (await request.json()) as ReqBody;
+
+            const messages = payload.messages || [] 
+
+            
+            const lastUserPrompt = [...messages].reverse().find(m => m.role === 'user')
+            
             const queryEmbedding = await env.AI.run("@cf/baai/bge-base-en-v1.5", {
-                text: [payload.messages.join(' ')]
+                text: [lastUserPrompt?.content]
             })
 
             const queryVectorNumber = Array.from(queryEmbedding.data[0]).map(num => Number(num));
@@ -41,7 +45,7 @@ env, ctx) => {
                 Context:
                 ${contextDocs}
                 
-                Question: ${payload.messages.join(' ')}`,
+                Question: ${messages}`,
                 stream: true
             });
             

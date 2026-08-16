@@ -40,7 +40,9 @@ export const AIQueryAPI = async (request: Request, env, ctx) => {
             const formattedMessages = [
             { role: "system", content: `You are an AI assistant helping with questions about a resume. 
                 Use the following pieces of context to answer the user's question at the end. 
-                If you don't know the answer, just say you don't know.` },
+                If you don't know the answer, just say you don't know.
+                ${contextDocs || "No specific context provided."}
+                ` },
             ...messages.map(m => ({
                 role: m.role === "assistant" ? "assistant" : "user",
                 content: m.content || ""

@@ -43,7 +43,6 @@ export const AIQueryAPI = async (request: Request, env, ctx) => {
                 If you don't know the answer, just say you don't know.
                 
                 Context:
-                ${contextDocs}
                 
                 Question: ${JSON.stringify(messages)}`,
                 stream: true

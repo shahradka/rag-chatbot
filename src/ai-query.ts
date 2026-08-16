@@ -45,7 +45,7 @@ export const AIQueryAPI = async (request: Request, env, ctx) => {
                 Context:
                 ${contextDocs}
                 
-                Question: ${messages}`,
+                Question: ${JSON.stringify(messages)}`,
                 stream: true
             });
             

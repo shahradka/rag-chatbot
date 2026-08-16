@@ -21,10 +21,10 @@ export const AIQueryAPI = async (request: Request, env, ctx) => {
             const messages = payload.messages || [] 
 
             
-            const lastUserPrompt = [...messages].reverse().find(m => m.role === 'user')
+            const lastUserPrompt = [...messages].reverse().find(m => m.role === 'user')?.content || ''
             
             const queryEmbedding = await env.AI.run("@cf/baai/bge-base-en-v1.5", {
-                text: [lastUserPrompt?.content]
+                text: [lastUserPrompt]
             })
 
             const queryVectorNumber = Array.from(queryEmbedding.data[0]).map(num => Number(num));

@@ -36,15 +36,19 @@ export const AIQueryAPI = async (request: Request, env, ctx) => {
             })
     
             const contextDocs = allVectorsMatches.matches.map((match) => match.metadata?.text).join("\n\n");
+
+            const formattedMessages = [
+            { role: "system", content: `You are an AI assistant helping with questions about a resume. 
+                Use the following pieces of context to answer the user's question at the end. 
+                If you don't know the answer, just say you don't know.` },
+            ...messages.map(m => ({
+                role: m.role === "assistant" ? "assistant" : "user",
+                content: m.content || ""
+            }))
+        ];
             
             const llmResponse = await env.AI.run("@cf/meta/llama-3.1-8b-instruct-fp8", {
-                prompt: `You are an AI assistant helping with questions about a resume. 
-                Use the following pieces of context to answer the user's question at the end. 
-                If you don't know the answer, just say you don't know.
-                
-                Context:
-                
-                Question: ${JSON.stringify(messages)}`,
+                messages: formattedMessages,
                 stream: true
             });
             
